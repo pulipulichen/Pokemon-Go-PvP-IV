@@ -1,6 +1,10 @@
+let debug = true
+
 setTimeout(() => {
   let name = getQueryVariable('pokemon')
-  console.log(name)
+  name = name.split('+').join(' ')
+  let max_cp = getQueryVariable('max_cp')
+  //console.log(name, max_cp)
   
   let currentI
   for (let i = 0; i < pokemonList.length; i++) {
@@ -10,13 +14,85 @@ setTimeout(() => {
     }
   }
   
-  if (!currentI || currentI + 1 === pokemonList.length) {
+  if (currentI === undefined) {
+    console.log('找不到', name)
     return false
   }
   
+  if (currentI === pokemonList.length) {
+    console.log('結束了', name)
+    return false
+  }
+  
+  let currentPokemon = pokemonList[currentI]
   let nextPokemon = pokemonList[currentI + 1]
   console.log(nextPokemon)
+  
+  if (max_cp === '1500') {
+    nextPokemon = currentPokemon
+  }
+  
+  saveBestIV(currentPokemon, () => {
+    goToNextPokemon(nextPokemon)
+  })
 }, 1000)
+
+let saveBestIV = function (currentPokemon, callback) {
+  let table = $('table.table.table-condensed.table-striped.text-light')
+  console.log(table.length)
+  if (table.length === 0) {
+    setTimeout(() => {
+      saveBestIV(currentPokemon, callback)
+    }, 1000)
+    return false
+  }
+  
+  if ($('.alert.alert-dismissible.alert-danger').length > 0) {
+    window.alert('名稱錯誤')
+    return false
+  }
+  
+  let iv = table.find('tbody tr:eq(1) td:eq(2)').text()
+  let max_cp = getQueryVariable('max_cp')
+  
+  let filename = max_cp + '_' + currentPokemon.id + '_' + currentPokemon.name + '.txt'
+  filename = filename.split("'").join('')
+  filename = filename.split(" ").join('_')
+  
+  let content = `${currentPokemon.id},"${currentPokemon.name}",${max_cp},"${iv}"`
+  
+  //console.log(iv, filename, content)
+  console.log(filename)
+  console.log(content)
+  
+  if (debug !== true) {
+    PuliDownloadAsFile(filename, content)
+  }
+  
+  callback()
+}
+
+let goToNextPokemon = function (nextPokemon) {
+  let name = nextPokemon.name
+  name = name.split("'").join('%27')
+  name = name.split(' ').join('+')
+  //name = encodeURIComponent(name)
+  
+  let max_cp = getQueryVariable('max_cp')
+  if (max_cp === '1500') {
+    max_cp = '2500'
+  }
+  else {
+    max_cp = '1500'
+  }
+  
+  let url = `https://gostadium.club/pvp/iv?pokemon=${name}&max_cp=${max_cp}&min_iv=0&att_iv=0&def_iv=15&sta_iv=15`
+  console.log(url)
+  
+  if (debug !== true) {
+    location.href = url
+  }
+}
 
 let pokemonList = [
   {
@@ -133,7 +209,7 @@ let pokemonList = [
   },
   {
     "id": 29,
-    "name": "Nidoran"
+    "name": "Nidoran F"
   },
   {
     "id": 30,
@@ -145,7 +221,7 @@ let pokemonList = [
   },
   {
     "id": 32,
-    "name": "Nidoran"
+    "name": "Nidoran M"
   },
   {
     "id": 33,
@@ -1773,7 +1849,7 @@ let pokemonList = [
   },
   {
     "id": 439,
-    "name": "Mime Jr."
+    "name": "Mime Jr"
   },
   {
     "id": 440,
